@@ -10,48 +10,32 @@ import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
-import java.util.Iterator;
 
 /**
  * Конфигурация кеширования для приложения
  */
 @Configuration
-@EnableCaching
 public class CacheConfig {
 
     @Bean
-    public CacheManager cacheManager() {
+    public JCacheCacheManager cacheManager() {
         // Получаем JCache провайдер
         CachingProvider cachingProvider = Caching.getCachingProvider();
         
         // Создаем JCache менеджер
-        javax.cache.CacheManager jcacheManager = cachingProvider.getCacheManager();
-
+        javax.cache.CacheManager cacheManager = cachingProvider.getCacheManager();
 
         // Создаем кеши программно через JCache API
-        if (!cacheExists(jcacheManager, "helloCache")) {
-            jcacheManager.createCache("helloCache", 
-                new javax.cache.configuration.MutableConfiguration<String, String>()
-                    .setTypes(String.class, String.class)
-                    .setStoreByValue(false)
-                    .setExpiryPolicyFactory(
-                        CreatedExpiryPolicy.factoryOf(Duration.FIVE_MINUTES))
-                    .setStatisticsEnabled(true)
-            );
-        }
-
-        return new JCacheCacheManager(jcacheManager);
+        cacheManager.createCache("helloCache", 
+            new javax.cache.configuration.MutableConfiguration<String, String>()
+                .setTypes(String.class, String.class)
+                .setStoreByValue(true)
+                .setExpiryPolicyFactory(
+                    CreatedExpiryPolicy.factoryOf(Duration.FIVE_MINUTES))
+                .setStatisticsEnabled(true)
+        );
+ 
+        return new JCacheCacheManager(cacheManager);
     }
-
-    private boolean cacheExists(javax.cache.CacheManager cacheManager, String cacheName) {
-        Iterator<String> iterator = cacheManager.getCacheNames().iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().equals(cacheName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
 }
